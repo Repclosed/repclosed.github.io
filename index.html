@@ -92,13 +92,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: max(24px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
-    perspective: 1200px;
+    padding: 84px max(18px, env(safe-area-inset-right)) calc(108px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    perspective: 1300px;
   }
 
-  /* ---------- glass card ---------- */
+  /* =========================================================
+     ASYMMETRICAL OBSIDIAN CAPSULE CARD
+     ========================================================= */
+
   .tilt-wrap {
-    width: min(440px, 100%);
+    width: min(480px, 100%);
     transform-style: preserve-3d;
     will-change: transform;
     transform: translate3d(0, 0, 0);
@@ -109,129 +112,173 @@
     --gy: 0%;
     position: relative;
     width: 100%;
-    padding: 26px 26px 24px;
-    border-radius: 28px;
-    border: 1px solid var(--line);
+    padding: 30px 26px 22px;
+    border-radius: 46px 26px 46px 26px;
+    border: 1px solid transparent;
     background:
-      linear-gradient(160deg, rgba(38, 38, 38, 0.55) 0%, rgba(12, 12, 12, 0.62) 46%, rgba(20, 20, 20, 0.5) 100%);
-    -webkit-backdrop-filter: blur(24px) saturate(115%);
-    backdrop-filter: blur(24px) saturate(115%);
+      linear-gradient(165deg, rgba(30, 30, 30, 0.66) 0%, rgba(11, 11, 11, 0.72) 46%, rgba(22, 22, 22, 0.62) 100%) padding-box,
+      linear-gradient(118deg,
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(255, 255, 255, 0.06) 24%,
+        rgba(148, 163, 184, 0.34) 48%,
+        rgba(255, 255, 255, 0.05) 66%,
+        rgba(255, 255, 255, 0.32) 100%) border-box;
+    -webkit-backdrop-filter: blur(28px) saturate(125%);
+    backdrop-filter: blur(28px) saturate(125%);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.07) inset,
-      0 -1px 0 rgba(0, 0, 0, 0.6) inset,
-      0 38px 90px -24px rgba(0, 0, 0, 0.92),
-      0 8px 32px -12px rgba(0, 0, 0, 0.8);
+      0 1px 0 rgba(255, 255, 255, 0.08) inset,
+      0 -1px 0 rgba(0, 0, 0, 0.65) inset,
+      0 44px 96px -24px rgba(0, 0, 0, 0.95),
+      0 10px 36px -12px rgba(0, 0, 0, 0.85),
+      0 0 0 1px rgba(0, 0, 0, 0.55);
     transform-style: preserve-3d;
-    transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg);
     will-change: transform;
-    transition: box-shadow 0.5s ease;
-    animation: card-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: card-in 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   @keyframes card-in {
-    from { opacity: 0; transform: translate3d(0, 26px, 0) scale(0.97); filter: blur(6px); }
+    from { opacity: 0; transform: translate3d(0, 30px, 0) scale(0.96); filter: blur(8px); }
     to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
   }
 
-  /* moving specular glare */
+  /* slow border-sheen rotation via a rotating conic band, clipped to the border */
   .card::before {
     content: "";
     position: absolute;
-    inset: -1px;
+    inset: 0;
     border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--sheen, 0deg),
+      transparent 0deg, rgba(255, 255, 255, 0.55) 18deg, transparent 46deg,
+      transparent 180deg, rgba(148, 163, 184, 0.45) 205deg, transparent 236deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
     pointer-events: none;
-    background:
-      radial-gradient(360px circle at var(--gx) var(--gy), rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.045) 32%, transparent 62%);
-    opacity: var(--glare, 0);
-    transition: opacity 0.35s ease;
-    mix-blend-mode: screen;
-    z-index: 0;
+    z-index: 4;
+    animation: sheen-turn 7s linear infinite;
+    opacity: 0.9;
   }
 
-  /* angled silver band */
+  @property --sheen {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
+
+  @keyframes sheen-turn { to { --sheen: 360deg; } }
+
+  /* angled specular glare following the tilt pointer */
   .card::after {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: linear-gradient(
-      115deg,
-      transparent 34%,
-      rgba(255, 255, 255, 0.055) 45%,
-      rgba(255, 255, 255, 0.14) 50%,
-      rgba(255, 255, 255, 0.055) 55%,
-      transparent 66%
-    );
-    background-size: 260% 260%;
-    background-position: var(--band, 120%) 0;
-    opacity: 0.85;
+    background:
+      radial-gradient(380px circle at var(--gx) var(--gy), rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04) 34%, transparent 64%),
+      linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.05) 46%, rgba(255, 255, 255, 0.13) 50%, rgba(255, 255, 255, 0.05) 54%, transparent 64%);
+    background-size: 100% 100%, 260% 260%;
+    background-position: 0 0, var(--band, 120%) 0;
+    opacity: var(--glare, 0.55);
     mix-blend-mode: screen;
-    z-index: 0;
+    z-index: 3;
   }
 
-  .card > * { position: relative; z-index: 1; }
+  .card > * { position: relative; z-index: 2; }
 
-  /* ---------- top meta ---------- */
-  .meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 22px;
-  }
-
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 11px;
-    border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    background: rgba(22, 22, 22, 0.6);
-    color: var(--silver);
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .pill svg { width: 12px; height: 12px; opacity: 0.85; }
-  .dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: #d8dde5;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.85);
-    animation: pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
-
-  /* ---------- identity ---------- */
-  .identity { text-align: center; }
-
-  .avatar-wrap {
-    position: relative;
-    width: 108px;
-    height: 108px;
-    margin: 0 auto;
-    transform: translateZ(40px);
-    animation: float-y 7s ease-in-out infinite;
-  }
-  @keyframes float-y {
-    0%, 100% { transform: translateZ(40px) translateY(0); }
-    50%      { transform: translateZ(40px) translateY(-7px); }
-  }
-
-  .avatar-wrap .halo {
+  /* ---------- asymmetry chrome: vertical side tab ---------- */
+  .side-tab {
     position: absolute;
-    inset: -7px;
-    border-radius: 50%;
-    background: conic-gradient(from 180deg, rgba(255,255,255,0.55), rgba(148,163,184,0.05), rgba(255,255,255,0.4), rgba(148,163,184,0.05), rgba(255,255,255,0.55));
-    filter: blur(9px);
-    opacity: 0.55;
-    animation: spin-slow 12s linear infinite;
+    top: 50%;
+    right: -13px;
+    transform: translateY(-50%) translateZ(30px);
+    writing-mode: vertical-rl;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: rgba(226, 232, 240, 0.6);
+    padding: 14px 4px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0.9), rgba(12, 12, 12, 0.9));
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+    user-select: none;
+    z-index: 5;
   }
-  @keyframes spin-slow { to { transform: rotate(360deg); } }
+
+  /* =========================================================
+     IDENTITY — chrome ring + offset type block
+     ========================================================= */
+
+  .identity {
+    position: relative;
+    padding-left: 132px;
+    min-height: 128px;
+    transform: translateZ(26px);
+    text-align: left;
+  }
+
+  /* the avatar floats free of the card on the far-left edge */
+  .avatar-anchor {
+    position: absolute;
+    left: -34px;
+    top: -46px;
+    width: 148px;
+    height: 148px;
+    transform: translateZ(52px);
+    animation: avatar-bob 7.4s ease-in-out infinite;
+  }
+
+  @keyframes avatar-bob {
+    0%, 100% { transform: translateZ(52px) translateY(0); }
+    50%      { transform: translateZ(52px) translateY(-9px); }
+  }
+
+  /* independent rotating chrome ring */
+  .chrome-ring {
+    position: absolute;
+    inset: -11px;
+    border-radius: 50%;
+    background: conic-gradient(from 200deg,
+      #f4f6f9 0deg, #7c838f 38deg, #eef1f6 78deg, #4a4f59 118deg,
+      #e8ecf1 160deg, #5b626d 205deg, #ffffff 248deg, #838a96 292deg,
+      #dfe4ea 330deg, #f4f6f9 360deg);
+    -webkit-mask: radial-gradient(farthest-side, transparent 73.5%, #000 74.5%);
+    mask: radial-gradient(farthest-side, transparent 73.5%, #000 74.5%);
+    filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.22)) drop-shadow(0 8px 22px rgba(0, 0, 0, 0.8));
+    animation: ring-turn 14s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes ring-turn {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* two light glints riding the ring */
+  .ring-glint {
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-left: -10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, #ffffff 0%, rgba(255, 255, 255, 0.5) 35%, transparent 70%);
+    filter: blur(1px);
+    animation: glint-spin 14s linear infinite;
+    transform-origin: 10px 85px;
+    pointer-events: none;
+  }
+
+  @keyframes glint-spin {
+    from { transform: rotate(0deg); opacity: 0.9; }
+    50%  { opacity: 0.45; }
+    to   { transform: rotate(360deg); opacity: 0.9; }
+  }
 
   .avatar {
     position: absolute;
@@ -240,130 +287,974 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    filter: grayscale(1) contrast(1.06) brightness(0.98);
-    box-shadow: 0 0 0 4px rgba(5, 5, 5, 0.85), 0 18px 40px -14px rgba(0, 0, 0, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    filter: grayscale(1) contrast(1.08) brightness(0.98);
+    box-shadow:
+      0 0 0 5px rgba(5, 5, 5, 0.82),
+      0 22px 44px -12px rgba(0, 0, 0, 0.95),
+      0 0 34px -6px rgba(255, 255, 255, 0.14);
     background: #101010;
   }
 
   .name {
-    margin: 18px 0 0;
+    margin: 2px 0 0;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 32px;
+    gap: 10px;
+    font-size: 36px;
     font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 1;
     color: var(--white);
-    text-shadow: 0 0 34px rgba(255, 255, 255, 0.16);
-    transform: translateZ(28px);
+    text-shadow: 0 0 38px rgba(255, 255, 255, 0.18);
+    transform: translateZ(40px);
   }
 
   .name .verify {
-    width: 18px;
-    height: 18px;
-    color: #d7dce4;
-    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
+    width: 20px;
+    height: 20px;
+    color: #d9dee6;
+    filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.4));
   }
 
   .handle {
-    margin: 9px 0 0;
+    margin: 7px 0 0;
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.42em;
-    text-indent: 0.42em;
-    color: rgba(226, 232, 240, 0.62);
+    letter-spacing: 0.5em;
     text-transform: uppercase;
-    transform: translateZ(22px);
+    color: rgba(226, 232, 240, 0.68);
+    transform: translateZ(30px);
   }
 
   .bio {
-    margin: 18px 0 0;
-    min-height: 22px;
+    margin: 10px 0 0;
+    min-height: 20px;
     font-family: var(--mono);
-    font-size: 12.5px;
-    letter-spacing: 0.16em;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: rgba(148, 163, 184, 0.95);
-    transform: translateZ(16px);
+    transform: translateZ(22px);
+    white-space: nowrap;
   }
 
-  .caret {
-    display: inline-block;
-    width: 7px;
-    margin-left: 3px;
-    color: #fff;
-    animation: blink 1.1s steps(1) infinite;
-  }
+  .caret { display: inline-block; width: 6px; margin-left: 2px; color: #fff; animation: blink 1.1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
 
-  /* ---------- socials ---------- */
-  .socials {
-    margin-top: 26px;
+  /* ---------- asymmetrical meta strip ---------- */
+  .meta-strip {
+    margin-top: 16px;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    align-items: center;
     gap: 10px;
-    transform: translateZ(12px);
+    transform: translateZ(34px);
   }
 
-  .social {
+  .meta-strip .pill:nth-child(2) { transform: translateX(16px); }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(20, 20, 20, 0.62);
+    color: var(--silver);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .pill svg { width: 12px; height: 12px; opacity: 0.9; }
+  .pill .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #e3e8ee;
+    box-shadow: 0 0 9px rgba(255, 255, 255, 0.9);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+  /* =========================================================
+     HORIZONTAL PILL CAPSULES (links)
+     ========================================================= */
+
+  .capsules {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    transform: translateZ(18px);
+  }
+
+  .capsule {
+    --cap-icon: 40px;
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex: 0 0 calc((100% - 20px) / 3);
-    aspect-ratio: 1 / 1;
-    border-radius: 17px;
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    background: linear-gradient(180deg, rgba(30, 30, 30, 0.72), rgba(14, 14, 14, 0.72));
+    gap: 13px;
+    width: calc(100% - 16px);
+    padding: 8px 14px 8px 9px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: linear-gradient(180deg, rgba(24, 24, 24, 0.78), rgba(11, 11, 11, 0.78));
     color: var(--silver);
     text-decoration: none;
     overflow: hidden;
-    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-                border-color 0.32s ease, color 0.32s ease, box-shadow 0.32s ease, background 0.32s ease;
     -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s ease,
+      background 0.3s ease,
+      box-shadow 0.34s ease,
+      width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .social::after {
+  /* staggered asymmetry — odd pills indent */
+  .capsule:nth-child(odd) { margin-left: 16px; width: calc(100% - 16px); }
+  .capsule:nth-child(even) { margin-left: 0; }
+
+  /* metallic light sweep */
+  .capsule::after {
+    content: "";
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    width: 46%;
+    left: -60%;
+    background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.1) 30%, rgba(255, 255, 255, 0.34) 48%, rgba(255, 255, 255, 0.1) 66%, transparent 100%);
+    transform: skewX(-18deg);
+    transition: left 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .capsule:hover,
+  .capsule:focus-visible {
+    transform: translateX(6px) scale(1.015);
+    width: 100%;
+    margin-left: 0;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.38);
+    background: linear-gradient(180deg, rgba(42, 42, 42, 0.85), rgba(18, 18, 18, 0.85));
+    box-shadow:
+      0 14px 34px -14px rgba(0, 0, 0, 0.9),
+      0 0 26px -6px rgba(255, 255, 255, 0.16),
+      0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+    outline: none;
+  }
+
+  .capsule:hover::after,
+  .capsule:focus-visible::after { left: 130%; }
+
+  .cap-icon {
+    flex: 0 0 var(--cap-icon);
+    width: var(--cap-icon);
+    height: var(--cap-icon);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #2b2b2b, #101010 70%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+    transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease;
+  }
+
+  .capsule:hover .cap-icon { transform: scale(1.12) rotate(-3deg); border-color: rgba(255, 255, 255, 0.3); }
+
+  .cap-icon svg { width: 19px; height: 19px; color: #cfd6de; }
+
+  .cap-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .cap-name {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #e7ebef;
+  }
+
+  .cap-sub {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: rgba(148, 163, 184, 0.78);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cap-arrow {
+    margin-left: auto;
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: opacity 0.3s ease, transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .cap-arrow svg { width: 13px; height: 13px; color: #fff; }
+
+  .capsule:hover .cap-arrow,
+  .capsule:focus-visible .cap-arrow { opacity: 1; transform: translateX(0); }
+
+  .capsules-empty {
+    margin: 12px 0 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(100, 116, 139, 0.8);
+  }
+
+  /* =========================================================
+     GLOWING SEARCH PILL
+     ========================================================= */
+
+  .searchbar {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 12;
+    width: min(540px, 94vw);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+  }
+
+  .searchbar > * { pointer-events: auto; }
+
+  .search-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 46px;
+    padding: 0 8px 0 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(203, 213, 225, 0.35);
+    background: linear-gradient(180deg, rgba(19, 19, 19, 0.82), rgba(9, 9, 9, 0.82));
+    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    backdrop-filter: blur(20px) saturate(130%);
+    animation: search-breathe 3.4s ease-in-out infinite;
+    transition: border-color 0.3s ease;
+  }
+
+  @keyframes search-breathe {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+        0 0 22px -2px rgba(226, 232, 240, 0.22),
+        0 0 60px -8px rgba(148, 163, 184, 0.28),
+        0 14px 34px -14px rgba(0, 0, 0, 0.9);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.09) inset,
+        0 0 34px 2px rgba(226, 232, 240, 0.34),
+        0 0 84px -6px rgba(203, 213, 225, 0.4),
+        0 14px 34px -14px rgba(0, 0, 0, 0.9);
+    }
+  }
+
+  .search-pill:focus-within {
+    border-color: rgba(255, 255, 255, 0.6);
+    animation: none;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+      0 0 42px 4px rgba(226, 232, 240, 0.32),
+      0 0 100px -4px rgba(203, 213, 225, 0.42),
+      0 14px 34px -14px rgba(0, 0, 0, 0.9);
+  }
+
+  .search-icon { width: 17px; height: 17px; color: #cbd5e1; flex: 0 0 auto; }
+
+  #search {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: #f1f5f9;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    outline: none;
+    caret-color: #fff;
+  }
+
+  #search::placeholder { color: rgba(148, 163, 184, 0.55); text-transform: uppercase; letter-spacing: 0.18em; }
+
+  .search-kbd {
+    flex: 0 0 auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(226, 232, 240, 0.75);
+    border: 1px solid rgba(203, 213, 225, 0.3);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    padding: 3px 7px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: opacity 0.2s ease;
+  }
+
+  .searchbar.has-query .search-kbd { opacity: 0.35; }
+
+  .search-status {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.65);
+    min-height: 12px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .searchbar.has-query .search-status { opacity: 1; }
+
+  /* =========================================================
+     MINI PLAYER (docked bottom)
+     ========================================================= */
+
+  .mini-player {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: max(14px, env(safe-area-inset-bottom));
+    z-index: 14;
+    width: min(480px, 94vw);
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 10px 0 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(203, 213, 225, 0.22);
+    background: linear-gradient(180deg, rgba(22, 22, 23, 0.82), rgba(8, 8, 9, 0.86));
+    -webkit-backdrop-filter: blur(22px) saturate(125%);
+    backdrop-filter: blur(22px) saturate(125%);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+      0 18px 48px -12px rgba(0, 0, 0, 0.9),
+      0 0 44px -10px rgba(203, 213, 225, 0.16);
+    user-select: none;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .mini-player:active { cursor: grabbing; }
+
+  .mp-disc {
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    position: relative;
+    background:
+      radial-gradient(circle at 50% 50%, #2a2a2d 0 26%, #131316 27% 33%, #1d1d20 34% 40%, #101013 41% 48%, #1d1d20 49% 56%, #101013 57% 64%, #1d1d20 65% 72%, #0b0b0d 73%);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 0 16px -4px rgba(255, 255, 255, 0.18);
+    padding: 0;
+  }
+
+  .mp-disc::after {
+    content: "";
+    position: absolute;
+    inset: 34%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #d9dee6, #5b626d 70%);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+  }
+
+  .mini-player.playing .mp-disc { animation: disc-spin 4.5s linear infinite; }
+
+  @keyframes disc-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+  .mp-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    max-width: 150px;
+  }
+
+  .mp-track {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #e6eaef;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mp-artist {
+    font-family: var(--mono);
+    font-size: 7.5px;
+    letter-spacing: 0.18em;
+    color: rgba(148, 163, 184, 0.7);
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mp-bars {
+    display: block;
+    width: 84px;
+    height: 12px;
+    opacity: 0.95;
+  }
+
+  .mp-btn {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.03);
+    color: #d7dce4;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .mp-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); transform: scale(1.1); }
+  .mp-btn:active { transform: scale(0.94); }
+  .mp-btn svg { width: 15px; height: 15px; }
+
+  .mp-play {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(180deg, #e8ecf1, #aab2bd);
+    color: #0a0a0a;
+    border: 0;
+    box-shadow: 0 2px 12px rgba(255, 255, 255, 0.28), 0 0 22px -4px rgba(255, 255, 255, 0.35);
+  }
+
+  .mp-play:hover { background: linear-gradient(180deg, #ffffff, #c3cad3); border: 0; }
+  .mp-play svg { width: 17px; height: 17px; }
+
+  .mp-expand {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: rgba(226, 232, 240, 0.65);
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.3s ease;
+  }
+
+  .mp-expand:hover { color: #fff; transform: translateY(-3px); }
+  .mp-expand svg { width: 18px; height: 18px; }
+
+  /* =========================================================
+     HOLOGRAPHIC SOUND DECK (full-screen, swipe up/down)
+     ========================================================= */
+
+  .deck {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, rgba(38, 38, 46, 0.85), transparent 60%),
+      radial-gradient(900px 620px at 50% 115%, rgba(30, 30, 38, 0.8), transparent 62%),
+      rgba(5, 5, 6, 0.9);
+    -webkit-backdrop-filter: blur(30px) saturate(120%);
+    backdrop-filter: blur(30px) saturate(120%);
+    transform: translateY(103%);
+    visibility: hidden;
+    opacity: 0;
+    transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease, visibility 0.4s;
+    overflow: hidden;
+  }
+
+  .deck.open { transform: translateY(0); visibility: visible; opacity: 1; }
+
+  .deck-inner {
+    position: relative;
+    z-index: 1;
+    width: min(480px, 100%);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: max(14px, env(safe-area-inset-top)) 20px calc(12px + env(safe-area-inset-bottom));
+    overflow: hidden;
+  }
+
+  /* holographic scanlines */
+  .deck-inner::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
-    transform: translateX(-130%);
-    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0 5px,
+      rgba(255, 255, 255, 0.014) 5px 6px
+    );
+    pointer-events: none;
+    z-index: -1;
   }
 
-  .social svg { width: 20px; height: 20px; transition: transform 0.32s ease; }
-
-  .social:hover,
-  .social:focus-visible {
-    transform: translateY(-4px);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.36);
-    background: linear-gradient(180deg, rgba(46, 46, 46, 0.8), rgba(20, 20, 20, 0.8));
-    box-shadow: 0 14px 28px -14px rgba(0, 0, 0, 0.9), 0 0 22px -6px rgba(255, 255, 255, 0.25);
-    outline: none;
+  .deck-handle {
+    flex: 0 0 auto;
+    width: 100%;
+    display: grid;
+    place-items: center;
+    padding: 4px 0 10px;
+    cursor: grab;
+    touch-action: none;
   }
-  .social:hover::after,
-  .social:focus-visible::after { transform: translateX(130%); }
-  .social:hover svg { transform: scale(1.12); }
 
-  .social:active { transform: translateY(-1px) scale(0.98); }
+  .deck-handle:active { cursor: grabbing; }
 
-  /* ---------- footer ---------- */
-  .footer {
-    margin: 24px 0 0;
-    text-align: center;
+  .deck-handle span {
+    width: 54px;
+    height: 4.5px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, transparent, rgba(226, 232, 240, 0.55), transparent);
+  }
+
+  .deck-top {
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+  }
+
+  .deck-title {
     font-family: var(--mono);
     font-size: 9.5px;
-    letter-spacing: 0.3em;
-    text-indent: 0.3em;
+    letter-spacing: 0.34em;
     text-transform: uppercase;
-    color: rgba(100, 116, 139, 0.75);
+    color: rgba(226, 232, 240, 0.72);
+  }
+
+  .deck-title b { color: #fff; font-weight: 600; }
+
+  .deck-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+    color: #e2e8f0;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform 0.25s ease, background 0.25s ease;
+  }
+
+  .deck-close:hover { transform: rotate(90deg); background: rgba(255, 255, 255, 0.12); }
+  .deck-close svg { width: 16px; height: 16px; }
+
+  /* ---------- spinning vinyl ---------- */
+  .vinyl-stage {
+    flex: 0 0 auto;
+    position: relative;
+    perspective: 800px;
+    margin: 6px 0 2px;
+    display: grid;
+    place-items: center;
+  }
+
+  .deck-viz {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(360px, 92vw);
+    aspect-ratio: 1;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .vinyl { position: relative; z-index: 1; }
+
+  .vinyl {
+    position: relative;
+    width: min(212px, 52vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transform: rotateX(16deg);
+    background:
+      radial-gradient(circle at 50% 50%, #2b2b2e 0 15%, #141417 16% 24%,
+        #1f1f22 25% 30%, #101013 31% 40%, #1f1f22 41% 46%, #101013 47% 56%,
+        #1f1f22 57% 62%, #101013 63% 72%, #1e1e21 73% 78%, #0a0a0c 79%);
+    box-shadow:
+      0 30px 60px -18px rgba(0, 0, 0, 0.95),
+      0 0 60px -12px rgba(226, 232, 240, 0.22),
+      0 0 0 7px rgba(5, 5, 5, 0.7),
+      0 0 0 8px rgba(255, 255, 255, 0.14);
+    animation: vinyl-spin 5.5s linear infinite;
+    animation-play-state: paused;
+  }
+
+  .deck.playing .vinyl { animation-play-state: running; }
+
+  @keyframes vinyl-spin {
+    from { transform: rotateX(16deg) rotateZ(0deg); }
+    to   { transform: rotateX(16deg) rotateZ(360deg); }
+  }
+
+  /* rotating specular sweep */
+  .vinyl::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 140deg,
+      transparent 0deg, rgba(255, 255, 255, 0.38) 28deg, transparent 66deg,
+      transparent 190deg, rgba(255, 255, 255, 0.22) 224deg, transparent 262deg);
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .vinyl-label {
+    position: absolute;
+    inset: 35%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 42% 38%, #3a3a3f, #0e0e10 75%);
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.8), 0 0 26px -6px rgba(226, 232, 240, 0.3) inset;
+    z-index: 2;
+  }
+
+  .vinyl-label span {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.42em;
+    text-indent: 0.42em;
+    color: #e6eaef;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+  }
+
+  .vinyl-hole {
+    position: absolute;
+    inset: 46.5%;
+    border-radius: 50%;
+    background: #050505;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    z-index: 3;
+  }
+
+  /* ---------- deck meta ---------- */
+  .deck-meta { text-align: center; margin-top: 10px; transform-style: preserve-3d; }
+
+  .deck-track {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #f2f5f8;
+    text-shadow: 0 0 28px rgba(226, 232, 240, 0.35);
+    max-width: 90vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .deck-artist {
+    margin: 5px 0 0;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(203, 213, 225, 0.6);
+  }
+
+  /* ---------- scrubber ---------- */
+  .scrub-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .t {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: rgba(203, 213, 225, 0.65);
+    min-width: 30px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .scrubber {
+    --fill: 0%;
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 22px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .scrubber::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #e6eaef var(--fill), rgba(148, 163, 184, 0.2) var(--fill));
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+  }
+
+  .scrubber::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    margin-top: -5.5px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #ffffff, #97a1ad 75%);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.45), 0 2px 4px rgba(0, 0, 0, 0.7);
+  }
+
+  .scrubber::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(148, 163, 184, 0.2);
+  }
+
+  .scrubber::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: #e6eaef;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  }
+
+  .scrubber::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #ffffff, #97a1ad 75%);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.45);
+  }
+
+  .scrubber:disabled { opacity: 0.35; cursor: default; }
+
+  /* ---------- transport controls ---------- */
+  .deck-controls {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 10px;
+  }
+
+  .dctrl {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+    color: #d7dce4;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    position: relative;
+  }
+
+  .dctrl:hover { background: rgba(255, 255, 255, 0.12); transform: scale(1.08); }
+  .dctrl:active { transform: scale(0.94); }
+  .dctrl svg { width: 19px; height: 19px; }
+
+  .dctrl.main {
+    width: 64px;
+    height: 64px;
+    border: 0;
+    background: linear-gradient(180deg, #f2f5f8, #9aa4b0);
+    color: #08080a;
+    box-shadow:
+      0 4px 18px rgba(255, 255, 255, 0.3),
+      0 0 44px -8px rgba(226, 232, 240, 0.4);
+  }
+
+  .dctrl.main:hover { transform: scale(1.1); background: linear-gradient(180deg, #ffffff, #b3bcca); }
+  .dctrl.main svg { width: 24px; height: 24px; }
+
+  .dctrl.toggled {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 16px -4px rgba(255, 255, 255, 0.35);
+  }
+
+  /* ---------- track list ---------- */
+  .tracklist {
+    flex: 1 1 auto;
+    width: 100%;
+    margin: 12px 0 6px;
+    padding: 0;
+    list-style: none;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .track {
+    display: grid;
+    grid-template-columns: 30px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 8px;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(203, 213, 225, 0.85);
+    font-family: var(--sans);
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-radius: 12px;
+  }
+
+  .track:hover { background: rgba(255, 255, 255, 0.05); }
+
+  .track-idx {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: rgba(100, 116, 139, 0.85);
+    letter-spacing: 0.08em;
+  }
+
+  .track-name {
+    font-size: 12px;
+    font-weight: 550;
+    color: #e2e8ee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-artist {
+    font-family: var(--mono);
+    font-size: 7px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.6);
+    margin-top: 2px;
+  }
+
+  .track-eq {
+    display: none;
+    gap: 2px;
+    align-items: flex-end;
+    height: 13px;
+  }
+
+  .track-eq i {
+    width: 3px;
+    background: linear-gradient(180deg, #fff, #94a3b8);
+    border-radius: 1px;
+    animation: eq-bounce 0.9s ease-in-out infinite;
+  }
+
+  .track-eq i:nth-child(1) { animation-delay: 0s; height: 60%; }
+  .track-eq i:nth-child(2) { animation-delay: 0.28s; height: 100%; }
+  .track-eq i:nth-child(3) { animation-delay: 0.52s; height: 75%; }
+
+  @keyframes eq-bounce {
+    0%, 100% { transform: scaleY(0.35); }
+    50%      { transform: scaleY(1); }
+  }
+
+  .track.active .track-eq { display: flex; }
+  .track.active .track-dur { display: none; }
+  .track.active { background: rgba(255, 255, 255, 0.06); }
+  .track.active .track-name { color: #fff; }
+
+  .track-dur {
+    font-family: var(--mono);
+    font-size: 8.5px;
+    color: rgba(148, 163, 184, 0.65);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .track-info { display: flex; flex-direction: column; min-width: 0; }
+  .track.hidden { display: none; }
+  .capsule.hidden { display: none; }
+  .deck:not(.playing) .track-eq i { animation-play-state: paused; }
+
+  .deck-foot {
+    flex: 0 0 auto;
+    margin: 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 6.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(100, 116, 139, 0.6);
+    line-height: 1.9;
+  }
+
+  .deck-foot a { color: rgba(203, 213, 225, 0.75); text-decoration: none; border-bottom: 1px dotted rgba(203,213,225,.4); }
+  .deck-foot a:hover { color: #fff; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 560px) {
+    .shell { padding: 78px 12px calc(104px + env(safe-area-inset-bottom)); }
+    .identity { padding-left: 96px; min-height: 108px; }
+    .avatar-anchor { left: -14px; top: -34px; width: 116px; height: 116px; }
+    .name { font-size: 27px; }
+    .handle { font-size: 8px; letter-spacing: 0.4em; }
+    .bio { font-size: 8px; letter-spacing: 0.16em; white-space: normal; }
+    .side-tab { display: none; }
+    .meta-strip .pill:nth-child(2) { transform: none; }
+    .capsules { gap: 8px; }
+    .capsule:nth-child(odd) { margin-left: 8px; }
+    .cap-sub { display: none; }
+    .mp-meta { max-width: 108px; }
+    .mp-artist { display: none; }
+    .mp-bars { width: 64px; }
+    .deck-controls { gap: 12px; }
+    .vinyl-stage { margin-top: 2px; }
+    .vinyl { width: 38vw; }
+    .deck-track { font-size: 17px; }
+  }
+
+  @media (max-height: 740px) {
+    .vinyl { width: min(150px, 34vh); }
+    .vinyl-stage { margin: 2px 0 0; }
+    .deck-track { font-size: 17px; }
+    .tracklist { flex-basis: 30%; }
   }
 
   /* ---------- entry overlay ---------- */
@@ -441,75 +1332,187 @@
 <div class="vignette"></div>
 <div class="grain"></div>
 
+<!-- scene canvas stays as-is above -->
+
+<!-- GLOWING SEARCH PILL -->
+<header class="searchbar" id="searchbar">
+  <div class="search-pill" role="search">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/>
+    </svg>
+    <input id="search" type="text" placeholder="Search links &amp; tracks" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search links and tracks" />
+    <kbd class="search-kbd">/</kbd>
+  </div>
+  <div class="search-status" id="searchStatus" role="status" aria-live="polite"></div>
+</header>
+
+<!-- ambient audio element (hidden, wired to Web Audio) -->
+<audio id="audio" crossorigin="anonymous" preload="none" playsinline></audio>
+
 <div class="shell">
   <div class="tilt-wrap" id="tilt">
-  <main class="card" id="card">
-    <div class="meta">
-      <span class="pill">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="2.6"/></svg>
-        <span id="views">1,337</span>
-      </span>
-      <span class="pill">
-        <span class="dot"></span>
-        the void
-      </span>
-    </div>
+    <main class="card" id="card">
+      <span class="side-tab" aria-hidden="true">EST.&nbsp;2026&nbsp;·&nbsp;CELLXGOD</span>
 
-    <div class="identity">
-      <div class="avatar-wrap">
-        <span class="halo" aria-hidden="true"></span>
-        <img class="avatar" src="assets/avatar.jpg" alt="CYAN avatar" width="108" height="108" />
+      <div class="identity">
+        <div class="avatar-anchor" aria-hidden="true">
+          <div class="chrome-ring"></div>
+          <span class="ring-glint"></span>
+          <img class="avatar" src="assets/avatar.jpg" alt="" width="148" height="148" />
+        </div>
+
+        <h1 class="name">
+          CYAN
+          <svg class="verify" viewBox="0 0 24 24" fill="currentColor" aria-label="verified" role="img">
+            <path d="M12 1.8 14.5 4l3.1-.3.9 3 2.7 1.6-1.2 2.9 1.2 2.9-2.7 1.6-.9 3-3.1-.3L12 22.2 9.5 20l-3.1.3-.9-3-2.7-1.6 1.2-2.9L2.8 8.3l2.7-1.6.9-3L9.5 4 12 1.8Z" opacity=".22"/>
+            <path d="m10.9 15.6-2.7-2.7 1.1-1.1 1.6 1.6 4.1-4.1 1.1 1.1-5.2 5.2Z"/>
+          </svg>
+        </h1>
+        <p class="handle">CELLXGOD</p>
+        <p class="bio"><span id="typed"></span><span class="caret" aria-hidden="true">_</span></p>
       </div>
 
-      <h1 class="name">
-        CYAN
-        <svg class="verify" viewBox="0 0 24 24" fill="currentColor" aria-label="verified" role="img">
-          <path d="M12 1.8 14.5 4l3.1-.3.9 3 2.7 1.6-1.2 2.9 1.2 2.9-2.7 1.6-.9 3-3.1-.3L12 22.2 9.5 20l-3.1.3-.9-3-2.7-1.6 1.2-2.9L2.8 8.3l2.7-1.6.9-3L9.5 4 12 1.8Z" opacity=".22"/>
-          <path d="m10.9 15.6-2.7-2.7 1.1-1.1 1.6 1.6 4.1-4.1 1.1 1.1-5.2 5.2Z"/>
-        </svg>
-      </h1>
+      <div class="meta-strip">
+        <span class="pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="2.6"/></svg>
+          <span id="views">1,337</span>
+        </span>
+        <span class="pill"><span class="dot"></span>the void</span>
+      </div>
 
-      <p class="handle">CELLXGOD</p>
-      <p class="bio"><span id="typed"></span><span class="caret" aria-hidden="true">_</span></p>
-    </div>
+      <nav class="capsules" id="capsules" aria-label="Social links">
+        <a class="capsule" data-search="instagram ig cellxgod social photo" href="https://instagram.com/cellxgod" target="_blank" rel="noopener noreferrer" aria-label="Instagram @cellxgod">
+          <span class="cap-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1.05" fill="currentColor" stroke="none"/>
+            </svg>
+          </span>
+          <span class="cap-body"><span class="cap-name">Instagram</span><span class="cap-sub">@cellxgod</span></span>
+          <span class="cap-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+        </a>
 
-    <nav class="socials" aria-label="Social links">
-      <a class="social" href="https://instagram.com/cellxgod" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17.2" cy="6.8" r="1.05" fill="currentColor" stroke="none"/>
-        </svg>
-      </a>
+        <a class="capsule" data-search="github code repos dev cellxgod" href="https://github.com/cellxgod" target="_blank" rel="noopener noreferrer" aria-label="GitHub cellxgod">
+          <span class="cap-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.88 1.52 2.32 1.08 2.88.82.09-.64.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.94.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/>
+            </svg>
+          </span>
+          <span class="cap-body"><span class="cap-name">GitHub</span><span class="cap-sub">cellxgod</span></span>
+          <span class="cap-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+        </a>
 
-      <a class="social" href="https://github.com/cellxgod" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.88 1.52 2.32 1.08 2.88.82.09-.64.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.94.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/>
-        </svg>
-      </a>
+        <a class="capsule" data-search="spotify music streams playlists cellxgod" href="https://open.spotify.com/user/31duzxe26jysusaouhcwik26hvve?si=d5ZuSm2PTTS2iD4iXI20CA&amp;utm_source=copy-link&amp;sci=spotify%3Acard-config%3A5dbWFVxYCGIlZKdMmZwf4k" target="_blank" rel="noopener noreferrer" aria-label="Spotify">
+          <span class="cap-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.63 14.43a.78.78 0 0 1-1.07.26c-2.94-1.8-6.64-2.2-11-1.2a.78.78 0 1 1-.35-1.52c4.75-1.09 8.85-.63 12.15 1.39.37.22.48.7.27 1.07Zm1.24-2.76a.97.97 0 0 1-1.34.32c-3.36-2.07-8.49-2.67-12.47-1.46a.98.98 0 1 1-.57-1.87c4.54-1.38 10.19-.71 14.06 1.67.46.28.6.88.32 1.34Zm.11-2.9C14.12 8.37 7.5 8.15 3.67 9.32a1.17 1.17 0 1 1-.68-2.25C7.4 5.72 14.71 5.98 19.16 8.62a1.17 1.17 0 0 1-1.18 2.02Z"/>
+            </svg>
+          </span>
+          <span class="cap-body"><span class="cap-name">Spotify</span><span class="cap-sub">cellxgod</span></span>
+          <span class="cap-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+        </a>
 
-      <a class="social" href="https://open.spotify.com/user/31duzxe26jysusaouhcwik26hvve?si=d5ZuSm2PTTS2iD4iXI20CA&amp;utm_source=copy-link&amp;sci=spotify%3Acard-config%3A5dbWFVxYCGIlZKdMmZwf4k" target="_blank" rel="noopener noreferrer" aria-label="Spotify" title="Spotify">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.63 14.43a.78.78 0 0 1-1.07.26c-2.94-1.8-6.64-2.2-11-1.2a.78.78 0 1 1-.35-1.52c4.75-1.09 8.85-.63 12.15 1.39.37.22.48.7.27 1.07Zm1.24-2.76a.97.97 0 0 1-1.34.32c-3.36-2.07-8.49-2.67-12.47-1.46a.98.98 0 1 1-.57-1.87c4.54-1.38 10.19-.71 14.06 1.67.46.28.6.88.32 1.34Zm.11-2.9C14.12 8.37 7.5 8.15 3.67 9.32a1.17 1.17 0 1 1-.68-2.25C7.4 5.72 14.71 5.98 19.16 8.62a1.17 1.17 0 0 1-1.18 2.02Z"/>
-        </svg>
-      </a>
+        <a class="capsule" data-search="youtube video channel watch" href="https://www.youtube.com/channel/UCTXBbbD0OpzqaCA3WRJRXQQ" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+          <span class="cap-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.25 5 12 5 12 5s-6.25 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.75 19 12 19 12 19s6.25 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15.2V8.8L15.5 12 10 15.2Z"/>
+            </svg>
+          </span>
+          <span class="cap-body"><span class="cap-name">YouTube</span><span class="cap-sub">UCTXBbbD0OpzqaCA3WRJRXQQ</span></span>
+          <span class="cap-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+        </a>
 
-      <a class="social" href="https://www.youtube.com/channel/UCTXBbbD0OpzqaCA3WRJRXQQ" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.25 5 12 5 12 5s-6.25 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.75 19 12 19 12 19s6.25 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15.2V8.8L15.5 12 10 15.2Z"/>
-        </svg>
-      </a>
-
-      <a class="social" href="https://m.twitch.tv/iamvellex?desktop-redirect=true" target="_blank" rel="noopener noreferrer" aria-label="Twitch" title="Twitch">
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M4.3 3 3 6.4v13.1h4.2V22h2.6l2.5-2.5h3.4L21 14.6V3H4.3Zm14.9 10.8-3.2 3.2h-5l-2.4 2.4v-2.4H5.4V4.8h13.8v9Zm-3.6-6.9h-1.8v5.4h1.8V6.9Zm-4.8 0H8.9v5.4h1.9V6.9Z"/>
-        </svg>
-      </a>
-
-    </nav>
-
-    <p class="footer">CELLXGOD &middot; EST. 2026</p>
-  </main>
+        <a class="capsule" data-search="twitch live stream gaming iamvellex" href="https://m.twitch.tv/iamvellex?desktop-redirect=true" target="_blank" rel="noopener noreferrer" aria-label="Twitch iamvellex">
+          <span class="cap-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M4.3 3 3 6.4v13.1h4.2V22h2.6l2.5-2.5h3.4L21 14.6V3H4.3Zm14.9 10.8-3.2 3.2h-5l-2.4 2.4v-2.4H5.4V4.8h13.8v9Zm-3.6-6.9h-1.8v5.4h1.8V6.9Zm-4.8 0H8.9v5.4h1.9V6.9Z"/>
+            </svg>
+          </span>
+          <span class="cap-body"><span class="cap-name">Twitch</span><span class="cap-sub">iamvellex</span></span>
+          <span class="cap-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+        </a>
+      </nav>
+      <p class="capsules-empty" id="capsulesEmpty" hidden>No links match</p>
+    </main>
   </div>
 </div>
+
+<!-- MINI PLAYER (docked bottom) -->
+<footer class="mini-player" id="miniPlayer" aria-label="Music player — swipe up for sound deck">
+  <button class="mp-disc" id="mpDisc" aria-label="Open sound deck"></button>
+  <div class="mp-meta">
+    <span class="mp-track" id="mpTrack">Obsidian Drift</span>
+    <span class="mp-artist" id="mpArtist">Generative · Synth</span>
+    <canvas class="mp-bars" id="mpBars" width="84" height="12" aria-hidden="true"></canvas>
+  </div>
+  <button class="mp-btn" id="mpPrev" aria-label="Previous track">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 6h2v12H7zM20 6v12L9.5 12 20 6z"/></svg>
+  </button>
+  <button class="mp-btn mp-play" id="mpPlay" aria-label="Play or pause">
+    <svg id="mpIconPlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13c0 1.2 1.3 1.9 2.3 1.3l10.2-6.5c1-.6 1-2 0-2.6L10.3 4.2C9.3 3.6 8 4.3 8 5.5z"/></svg>
+    <svg id="mpIconPause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="display:none"><path d="M7.5 5h3.4v14H7.5zM13.1 5h3.4v14h-3.4z"/></svg>
+  </button>
+  <button class="mp-btn" id="mpNext" aria-label="Next track">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 6h2v12h-2zM4 6v12l10.5-6L4 6z"/></svg>
+  </button>
+  <button class="mp-expand" id="mpExpand" aria-label="Swipe up — open sound deck">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg>
+  </button>
+</footer>
+
+<!-- HOLOGRAPHIC SOUND DECK -->
+<section class="deck" id="deck" role="dialog" aria-modal="true" aria-label="Sound deck" aria-hidden="true">
+  <div class="deck-inner">
+    <div class="deck-handle" id="deckHandle" aria-hidden="true"><span></span></div>
+    <div class="deck-top">
+      <span class="deck-title"><b>CYAN</b>&nbsp;//&nbsp;SOUND DECK</span>
+      <button class="deck-close" id="deckClose" aria-label="Close sound deck">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="vinyl-stage">
+      <canvas class="deck-viz" id="deckViz" aria-hidden="true"></canvas>
+      <div class="vinyl" id="vinyl">
+        <div class="vinyl-label"><span>CYAN</span></div>
+        <div class="vinyl-hole"></div>
+      </div>
+    </div>
+
+    <div class="deck-meta">
+      <h2 class="deck-track" id="deckTrack">Obsidian Drift</h2>
+      <p class="deck-artist" id="deckArtist">Generative · Synth</p>
+    </div>
+
+    <div class="scrub-row">
+      <span class="t" id="tCur">0:00</span>
+      <input class="scrubber" id="scrubber" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" />
+      <span class="t" id="tDur">0:00</span>
+    </div>
+
+    <div class="deck-controls">
+      <button class="dctrl" id="btnShuffle" aria-label="Shuffle" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h4.5c1.6 0 2.6.8 3.6 2.2l3.4 4.6c1 1.4 2 2.2 3.6 2.2H21"/><path d="M3 17h4.5c1.6 0 2.6-.8 3.6-2.2l1.2-1.6"/><path d="m18.5 4 2.5 3-2.5 3"/><path d="m18.5 14 2.5 3-2.5 3"/></svg>
+      </button>
+      <button class="dctrl" id="btnPrev" aria-label="Previous track">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 6h2v12H7zM20 6v12L9.5 12 20 6z"/></svg>
+      </button>
+      <button class="dctrl main" id="btnPlay" aria-label="Play or pause">
+        <svg id="deckIconPlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.5 5.5v13c0 1.2 1.3 1.9 2.3 1.3l10.3-6.5c1-.6 1-2 0-2.6L10.8 4.2c-1-.6-2.3.1-2.3 1.3z"/></svg>
+        <svg id="deckIconPause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="display:none"><path d="M7.5 5h3.4v14H7.5zM13.1 5h3.4v14h-3.4z"/></svg>
+      </button>
+      <button class="dctrl" id="btnNext" aria-label="Next track">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 6h2v12h-2zM4 6v12l10.5-6L4 6z"/></svg>
+      </button>
+      <button class="dctrl" id="btnRepeat" aria-label="Repeat track" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3.5 3.5L17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h13.5"/><path d="M7 22l-3.5-3.5L7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3.5"/></svg>
+      </button>
+    </div>
+
+    <ul class="tracklist" id="tracklist" aria-label="Track list"></ul>
+    <p class="deck-foot">TRACKS · <a href="https://incompetech.com/" target="_blank" rel="noopener noreferrer">KEVIN MACLEOD — INCOMPETECH (CC BY 4.0)</a> VIA ARCHIVE.ORG<br />+ GENERATIVE WEB-AUDIO AMBIENT SYNTH · FREE FOREVER</p>
+  </div>
+</section>
+
 
 <button class="gate" id="gate" type="button" aria-label="Enter site">
   <span class="line-1">WELCOME TO CYAN'S LOL</span>
@@ -1221,6 +2224,627 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) clock.stop();
   else clock.start();
 });
+
+/* =========================================================
+   CYAN // SOUND SYSTEM — search, mini player, holographic deck
+   Free streams (archive.org · Kevin MacLeod CC BY 4.0) with
+   CORS, plus generative Web Audio ambient synth as fallback.
+   ========================================================= */
+
+(() => {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+
+  /* ---------- element refs ---------- */
+  const audioEl      = $('audio');
+  const searchbar    = $('searchbar');
+  const searchInput  = $('search');
+  const searchStatus = $('searchStatus');
+  const capsulesEmpty = $('capsulesEmpty');
+  const capsulesEl   = $('capsules');
+  const tracklistEl  = $('tracklist');
+
+  const miniPlayer   = $('miniPlayer');
+  const mpDisc       = $('mpDisc');
+  const mpTrack      = $('mpTrack');
+  const mpArtist     = $('mpArtist');
+  const mpBars       = $('mpBars');
+  const mpPlay       = $('mpPlay');
+  const mpPrev       = $('mpPrev');
+  const mpNext       = $('mpNext');
+  const mpExpand     = $('mpExpand');
+  const mpIconPlay   = $('mpIconPlay');
+  const mpIconPause  = $('mpIconPause');
+
+  const deck         = $('deck');
+  const deckViz      = $('deckViz');
+  const deckHandle   = $('deckHandle');
+  const deckClose    = $('deckClose');
+  const deckTrack    = $('deckTrack');
+  const deckArtist   = $('deckArtist');
+  const deckIconPlay = $('deckIconPlay');
+  const deckIconPause= $('deckIconPause');
+  const btnPlay      = $('btnPlay');
+  const btnPrev      = $('btnPrev');
+  const btnNext      = $('btnNext');
+  const btnShuffle   = $('btnShuffle');
+  const btnRepeat    = $('btnRepeat');
+  const tCur         = $('tCur');
+  const tDur         = $('tDur');
+  const scrubber     = $('scrubber');
+  const vinyl        = $('vinyl');
+
+  if (!deck || !tracklistEl) return;
+
+  /* ---------- playlist ---------- */
+  const ARCHIVE = 'https://archive.org/download/KevinMacLeod_2019-04_Discography/Kevin%20MacLeod/Calming/';
+  const TRACKS = [
+    { name: 'Obsidian Drift',        artist: 'Generative · Ambient Synth', kind: 'synth',  synth: 'obsidian' },
+    { name: 'Carefree',              artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2004%20-%20Carefree.mp3' },
+    { name: 'Inner Light',           artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2010%20-%20Inner%20Light.mp3' },
+    { name: 'Meditation Impromptu',  artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2012%20-%20Meditation%20Impromptu%2001.mp3' },
+    { name: 'On the Passing of Time',artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2015%20-%20On%20the%20Passing%20of%20Time.mp3' },
+    { name: 'Bathed in the Light',   artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2002%20-%20Bathed%20in%20the%20Light.mp3' },
+    { name: 'Silver Blue Light',     artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2018%20-%20Silver%20Blue%20Light.mp3' },
+    { name: 'Chrome Rain',           artist: 'Generative · Ambient Synth', kind: 'synth',  synth: 'chrome' },
+  ];
+
+  const fmtTime = (s) => {
+    if (!isFinite(s)) return '∞';
+    const m = Math.floor(s / 60);
+    const ss = Math.floor(s % 60);
+    return m + ':' + String(ss).padStart(2, '0');
+  };
+
+  /* ---------- audio graph (lazy, gesture-gated) ---------- */
+  let ctx = null, analyser = null, masterGain = null, mediaSource = null, synthBus = null, freqData = null;
+
+  function ensureAudio() {
+    if (ctx) return true;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ctx = new AC();
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.82;
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+      masterGain = ctx.createGain();
+      masterGain.gain.value = 0.9;
+      analyser.connect(masterGain);
+      masterGain.connect(ctx.destination);
+      mediaSource = ctx.createMediaElementSource(audioEl);
+      mediaSource.connect(analyser);
+      synthBus = ctx.createGain();
+      synthBus.gain.value = 0.9;
+      synthBus.connect(analyser);
+      return true;
+    } catch (err) {
+      console.warn('Audio init failed:', err);
+      ctx = null;
+      return false;
+    }
+  }
+
+  /* ---------- generative ambient synth ---------- */
+  const synth = { timer: null, nodes: [], out: null, active: null };
+  const SCALES = {
+    obsidian: { pad: [110.0, 164.81, 220.0],  bells: [220, 246.94, 293.66, 329.63, 392.0, 440.0], cutoff: 820, delay: 0.62, lfo: 880 },
+    chrome:   { pad: [87.31, 130.81, 174.61], bells: [174.61, 196.0, 233.08, 261.63, 311.13, 349.23], cutoff: 620, delay: 0.46, lfo: 640 },
+  };
+
+  function startSynth(preset) {
+    stopSynth(true);
+    if (!ensureAudio()) return;
+    ctx.resume();
+    const cfg = SCALES[preset] || SCALES.obsidian;
+    const now = ctx.currentTime;
+
+    const out = ctx.createGain();
+    out.gain.setValueAtTime(0, now);
+    out.gain.linearRampToValueAtTime(1, now + 2.4);
+    out.connect(synthBus);
+
+    /* pad — detuned triangles + slow LFO sweep */
+    const padFilter = ctx.createBiquadFilter();
+    padFilter.type = 'lowpass';
+    padFilter.frequency.value = cfg.cutoff;
+    padFilter.Q.value = 7;
+    const padGain = ctx.createGain();
+    padGain.gain.value = 0.15;
+    padFilter.connect(padGain);
+    padGain.connect(out);
+
+    const padOsc = cfg.pad.map((f, i) => {
+      const o = ctx.createOscillator();
+      o.type = i === 1 ? 'sine' : 'triangle';
+      o.frequency.value = f;
+      o.detune.value = (i - 1) * 8;
+      o.connect(padFilter);
+      o.start();
+      return o;
+    });
+
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.07;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = cfg.lfo * 0.32;
+    lfo.connect(lfoGain);
+    lfoGain.connect(padFilter.frequency);
+    lfo.start();
+
+    /* dub delay for space */
+    const delay = ctx.createDelay(1.5);
+    delay.delayTime.value = cfg.delay;
+    const fb = ctx.createGain(); fb.gain.value = 0.38;
+    const wet = ctx.createGain(); wet.gain.value = 0.32;
+    delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(out);
+
+    /* glass bell arp — pentatonic, randomized */
+    const bellAt = () => {
+      const t = ctx.currentTime;
+      const base = cfg.bells[Math.floor(Math.random() * cfg.bells.length)];
+      const note = base * (Math.random() < 0.26 ? 2 : 1);
+      const o  = ctx.createOscillator(); o.type = 'sine';     o.frequency.value = note;
+      const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = note * 2.003;
+      const g  = ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.3, t + 0.014);
+      g.gain.exponentialRampToValueAtTime(0.0008, t + 3.8);
+      o.connect(g); o2.connect(g); g.connect(out);
+      const send = ctx.createGain(); send.gain.value = 0.85;
+      g.connect(send); send.connect(delay);
+      o.start(t); o2.start(t); o.stop(t + 4); o2.stop(t + 4);
+    };
+    const tick = () => {
+      bellAt();
+      synth.timer = window.setTimeout(tick, 1000 + Math.random() * 2600);
+    };
+    synth.timer = window.setTimeout(tick, 400);
+
+    synth.nodes = [...padOsc, lfo, out, padFilter, padGain, delay, fb, wet];
+    synth.out = out;
+    synth.active = preset;
+  }
+
+  function stopSynth(immediate) {
+    if (synth.timer) { clearTimeout(synth.timer); synth.timer = null; }
+    const nodes = synth.nodes;
+    const out = synth.out;
+    synth.nodes = []; synth.out = null; synth.active = null;
+    if (ctx && out && !immediate) {
+      try {
+        const t = ctx.currentTime;
+        out.gain.cancelScheduledValues(t);
+        out.gain.setValueAtTime(Math.max(out.gain.value, 0.0001), t);
+        out.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+      } catch (e) { /* noop */ }
+    }
+    window.setTimeout(() => {
+      nodes.forEach(n => { try { n.disconnect(); if (n.stop) n.stop(); } catch (e) { /* noop */ } });
+    }, immediate ? 80 : 750);
+  }
+
+  /* ---------- player state ---------- */
+  let current = 0, isPlaying = false, shuffle = false, repeatOne = false;
+  let consecutiveErrors = 0;
+
+  const setPlayingUI = (playing) => {
+    isPlaying = playing;
+    mpIconPlay.style.display  = playing ? 'none' : '';
+    mpIconPause.style.display = playing ? '' : 'none';
+    deckIconPlay.style.display  = playing ? 'none' : '';
+    deckIconPause.style.display = playing ? '' : 'none';
+    miniPlayer.classList.toggle('playing', playing);
+    deck.classList.toggle('playing', playing);
+  };
+
+  const trackButtons = () => Array.from(tracklistEl.querySelectorAll('.track'));
+
+  const markActiveTrack = () => {
+    trackButtons().forEach((el, idx) => el.classList.toggle('active', idx === current));
+  };
+
+  function loadTrack(i, autoplay = true) {
+    current = ((i % TRACKS.length) + TRACKS.length) % TRACKS.length;
+    const t = TRACKS[current];
+    stopSynth(true);
+    audioEl.pause();
+    audioEl.removeAttribute('src');
+    audioEl.load();
+
+    mpTrack.textContent = t.name;
+    mpArtist.textContent = t.artist;
+    deckTrack.textContent = t.name;
+    deckArtist.textContent = t.artist.toUpperCase();
+    tCur.textContent = '0:00';
+    tDur.textContent = t.kind === 'synth' ? '∞' : '···';
+    scrubber.value = 0;
+    scrubber.disabled = t.kind === 'synth';
+    scrubber.style.setProperty('--fill', '0%');
+    markActiveTrack();
+
+    if (autoplay) playCurrent(); else setPlayingUI(false);
+  }
+
+  function playCurrent() {
+    const t = TRACKS[current];
+    if (!ensureAudio()) { setPlayingUI(false); return; }
+    ctx.resume();
+    if (t.kind === 'synth') {
+      startSynth(t.synth);
+      setPlayingUI(true);
+      consecutiveErrors = 0;
+    } else {
+      if (audioEl.src !== t.url) audioEl.src = t.url;
+      audioEl.crossOrigin = 'anonymous';
+      const p = audioEl.play();
+      if (p && p.catch) {
+        p.catch(() => {
+          consecutiveErrors++;
+          loadTrack((current + 1) % TRACKS.length, true);
+        });
+      }
+      setPlayingUI(true);
+      consecutiveErrors = 0;
+    }
+  }
+
+  function pauseCurrent() {
+    if (TRACKS[current].kind === 'synth') stopSynth(false);
+    else audioEl.pause();
+    setPlayingUI(false);
+  }
+
+  function togglePlay() {
+    if (!ensureAudio()) return;
+    ctx.resume();
+    if (isPlaying) pauseCurrent(); else playCurrent();
+  }
+
+  function nextTrack() {
+    let n;
+    if (shuffle && TRACKS.length > 1) {
+      do { n = Math.floor(Math.random() * TRACKS.length); } while (n === current);
+    } else {
+      n = (current + 1) % TRACKS.length;
+    }
+    loadTrack(n, true);
+  }
+
+  function prevTrack() {
+    if (TRACKS[current].kind === 'stream' && audioEl.currentTime > 3) {
+      audioEl.currentTime = 0;
+      return;
+    }
+    loadTrack((current - 1 + TRACKS.length) % TRACKS.length, true);
+  }
+
+  audioEl.addEventListener('error', () => {
+    if (TRACKS[current].kind !== 'stream') return;
+    consecutiveErrors++;
+    if (consecutiveErrors >= 3) {
+      /* network/route dead — drop to guaranteed-local generative track */
+      consecutiveErrors = 0;
+      loadTrack(0, true);
+    } else {
+      loadTrack((current + 1) % TRACKS.length, true);
+    }
+  });
+
+  audioEl.addEventListener('ended', () => {
+    if (repeatOne) { audioEl.currentTime = 0; audioEl.play(); return; }
+    nextTrack();
+  });
+
+  audioEl.addEventListener('timeupdate', () => {
+    const dur = audioEl.duration;
+    if (!dur || !isFinite(dur)) return;
+    const ratio = audioEl.currentTime / dur;
+    scrubber.value = String(Math.floor(ratio * 1000));
+    scrubber.style.setProperty('--fill', (ratio * 100).toFixed(2) + '%');
+    tCur.textContent = fmtTime(audioEl.currentTime);
+    tDur.textContent = fmtTime(dur);
+    /* fill in the visible duration on the active row */
+    const row = trackButtons()[current];
+    const durEl = row && row.querySelector('.track-dur');
+    if (durEl) durEl.textContent = fmtTime(dur);
+  });
+
+  /* ---------- tracklist ---------- */
+  TRACKS.forEach((t, i) => {
+    const li = document.createElement('li');
+    const searchAttr = (t.name + ' ' + t.artist + ' music audio track').toLowerCase();
+    li.innerHTML =
+      '<button class="track" data-search="' + searchAttr + '" aria-label="Play ' + t.name + '">' +
+        '<span class="track-idx">' + String(i + 1).padStart(2, '0') + '</span>' +
+        '<span class="track-info">' +
+          '<span class="track-name">' + t.name + '</span>' +
+          '<span class="track-artist">' + t.artist + '</span>' +
+        '</span>' +
+        '<span class="track-eq" aria-hidden="true"><i></i><i></i><i></i></span>' +
+        '<span class="track-dur">' + (t.kind === 'synth' ? '∞' : '—') + '</span>' +
+      '</button>';
+    li.querySelector('.track').addEventListener('click', () => loadTrack(i, true));
+    tracklistEl.appendChild(li);
+  });
+
+  /* ---------- transport wiring ---------- */
+  mpPlay.addEventListener('click', togglePlay);
+  btnPlay.addEventListener('click', togglePlay);
+  mpPrev.addEventListener('click', prevTrack);
+  btnPrev.addEventListener('click', prevTrack);
+  mpNext.addEventListener('click', nextTrack);
+  btnNext.addEventListener('click', nextTrack);
+
+  btnShuffle.addEventListener('click', () => {
+    shuffle = !shuffle;
+    btnShuffle.classList.toggle('toggled', shuffle);
+    btnShuffle.setAttribute('aria-pressed', String(shuffle));
+  });
+
+  btnRepeat.addEventListener('click', () => {
+    repeatOne = !repeatOne;
+    btnRepeat.classList.toggle('toggled', repeatOne);
+    btnRepeat.setAttribute('aria-pressed', String(repeatOne));
+  });
+
+  scrubber.addEventListener('input', () => {
+    const dur = audioEl.duration;
+    if (!dur || !isFinite(dur)) return;
+    scrubber.style.setProperty('--fill', (scrubber.value / 10).toFixed(1) + '%');
+    tCur.textContent = fmtTime((scrubber.value / 1000) * dur);
+  });
+  scrubber.addEventListener('change', () => {
+    const dur = audioEl.duration;
+    if (dur && isFinite(dur)) audioEl.currentTime = (scrubber.value / 1000) * dur;
+  });
+
+  /* =========================================================
+     DECK — open/close + swipe gestures
+     ========================================================= */
+  let deckOpen = false;
+
+  function openDeck() {
+    deckOpen = true;
+    deck.classList.add('open');
+    deck.setAttribute('aria-hidden', 'false');
+    resizeDeckViz();
+  }
+  function closeDeck() {
+    deckOpen = false;
+    deck.classList.remove('open');
+    deck.setAttribute('aria-hidden', 'true');
+    deck.style.transition = '';
+    deck.style.transform = '';
+    deck.style.opacity = '';
+  }
+
+  mpDisc.addEventListener('click', openDeck);
+  mpExpand.addEventListener('click', openDeck);
+  deckClose.addEventListener('click', closeDeck);
+
+  /* swipe UP on the mini player opens the deck */
+  (() => {
+    let startY = null, dragging = false, opened = false;
+    miniPlayer.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button')) return;
+      startY = e.clientY; dragging = true; opened = false;
+      try { miniPlayer.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
+    });
+    miniPlayer.addEventListener('pointermove', (e) => {
+      if (!dragging || opened) return;
+      if (e.clientY - startY < -28) { opened = true; openDeck(); }
+    });
+    const end = () => { dragging = false; startY = null; };
+    miniPlayer.addEventListener('pointerup', end);
+    miniPlayer.addEventListener('pointercancel', end);
+  })();
+
+  /* swipe DOWN on the deck handle / top bar collapses it (finger-tracked) */
+  (() => {
+    const dragZones = [deckHandle, deck.querySelector('.deck-top')];
+    let startY = null, dy = 0, active = false, vel = 0, lastY = 0, lastT = 0;
+
+    const onDown = (e) => {
+      if (e.target.closest('button, input, a')) return;
+      startY = e.clientY; lastY = e.clientY; lastT = performance.now(); dy = 0; vel = 0; active = true;
+      deck.style.transition = 'none';
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
+    };
+    const onMove = (e) => {
+      if (!active) return;
+      dy = Math.max(0, e.clientY - startY);
+      const now = performance.now();
+      const dt = Math.max(1, now - lastT);
+      vel = (e.clientY - lastY) / dt; // px per ms, positive = downward
+      lastY = e.clientY; lastT = now;
+      deck.style.transform = 'translateY(' + dy + 'px)';
+      deck.style.opacity = String(Math.max(0.35, 1 - dy / (window.innerHeight * 1.15)));
+    };
+    const onUp = () => {
+      if (!active) return;
+      active = false;
+      deck.style.transition = '';
+      const fling = vel > 0.55;
+      if (dy > 120 || fling) closeDeck();
+      else {
+        deck.style.transform = 'translateY(0)';
+        deck.style.opacity = '1';
+      }
+      startY = null; dy = 0;
+    };
+
+    dragZones.forEach(zone => {
+      if (!zone) return;
+      zone.addEventListener('pointerdown', onDown);
+      zone.addEventListener('pointermove', onMove);
+      zone.addEventListener('pointerup', onUp);
+      zone.addEventListener('pointercancel', onUp);
+    });
+  })();
+
+  /* =========================================================
+     SEARCH — filters links & tracks, '/' to focus
+     ========================================================= */
+  const capsuleEls = () => Array.from(capsulesEl.querySelectorAll('.capsule'));
+
+  function applyFilter() {
+    const q = searchInput.value.trim().toLowerCase();
+    searchbar.classList.toggle('has-query', q.length > 0);
+    let linkCount = 0, trackCount = 0;
+
+    capsuleEls().forEach(el => {
+      const ok = !q || ((el.dataset.search || '') + ' ' + el.textContent).toLowerCase().includes(q);
+      el.classList.toggle('hidden', !ok);
+      if (ok) linkCount++;
+    });
+
+    trackButtons().forEach(el => {
+      const ok = !q || ((el.dataset.search || '') + ' ' + el.textContent).toLowerCase().includes(q);
+      el.classList.toggle('hidden', !ok);
+      if (ok) trackCount++;
+    });
+
+    if (capsulesEmpty) capsulesEmpty.hidden = !(q && linkCount === 0);
+    if (searchStatus) {
+      searchStatus.textContent = q
+        ? linkCount + ' LINKS · ' + trackCount + ' TRACKS' + ((linkCount === 0 && trackCount === 0) ? ' · NO MATCH' : '')
+        : '';
+    }
+  }
+
+  searchInput.addEventListener('input', applyFilter);
+
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    const typing = tag === 'input' || tag === 'textarea' || e.target.isContentEditable;
+    if (e.key === '/' && !typing) {
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+    } else if (e.key === 'Escape') {
+      if (document.activeElement === searchInput) {
+        searchInput.value = '';
+        applyFilter();
+        searchInput.blur();
+      } else if (deckOpen) {
+        closeDeck();
+      }
+    }
+  });
+
+  /* =========================================================
+     VISUALIZERS — mini bars + deck rings/spectrum
+     ========================================================= */
+  const roundRect = (c, x, y, w, h, r) => {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  };
+
+  const barsCtx = mpBars ? mpBars.getContext('2d') : null;
+  const vizCtx = deckViz ? deckViz.getContext('2d') : null;
+
+  function drawBars() {
+    if (!barsCtx) return;
+    const W = mpBars.width, H = mpBars.height;
+    barsCtx.clearRect(0, 0, W, H);
+    let data = null;
+    if (analyser) { analyser.getByteFrequencyData(freqData); data = freqData; }
+    const N = 18, bw = 3, gap = (W - N * bw) / (N - 1);
+    for (let i = 0; i < N; i++) {
+      const idx = data ? Math.floor(Math.pow(i / N, 1.35) * data.length * 0.72) : 0;
+      const v = data ? data[idx] / 255 : 0;
+      const h = Math.max(2, v * H + (isPlaying ? 0 : 0));
+      const g = barsCtx.createLinearGradient(0, H, 0, H - h);
+      g.addColorStop(0, 'rgba(148, 163, 184, 0.5)');
+      g.addColorStop(1, '#f4f6f9');
+      barsCtx.fillStyle = g;
+      roundRect(barsCtx, i * (bw + gap), H - h, bw, h, 1.5);
+      barsCtx.fill();
+    }
+  }
+
+  function resizeDeckViz() {
+    if (!deckViz) return;
+    const box = deckViz.getBoundingClientRect();
+    const size = Math.max(180, Math.floor(Math.min(box.width, box.height) * (window.devicePixelRatio || 1)));
+    if (deckViz.width !== size) { deckViz.width = size; deckViz.height = size; }
+  }
+
+  function drawViz() {
+    if (!vizCtx || !deckOpen) return;
+    const S = deckViz.width;
+    if (!S) return;
+    const c = vizCtx;
+    c.clearRect(0, 0, S, S);
+
+    let bass = 0, mid = 0, high = 0;
+    if (analyser) {
+      analyser.getByteFrequencyData(freqData);
+      for (let i = 0; i < 6; i++) bass += freqData[i]; bass /= 6 * 255;
+      for (let i = 12; i < 44; i++) mid += freqData[i]; mid /= 32 * 255;
+      for (let i = 62; i < 104; i++) high += freqData[i]; high /= 42 * 255;
+    }
+
+    const R0 = S * 0.315;
+
+    /* pulsing holographic rings — bass / mid / treble */
+    const rings = [
+      { r: R0 + S * 0.006 + bass * S * 0.045, a: 0.34 + bass * 0.45, w: 2.6 },
+      { r: R0 + S * 0.052 + mid  * S * 0.055, a: 0.22 + mid  * 0.38, w: 1.6 },
+      { r: R0 + S * 0.098 + high * S * 0.06,  a: 0.14 + high * 0.32, w: 1.1 },
+    ];
+    rings.forEach((ring) => {
+      c.beginPath();
+      c.arc(S / 2, S / 2, ring.r, 0, Math.PI * 2);
+      c.strokeStyle = 'rgba(226, 232, 240, ' + ring.a.toFixed(3) + ')';
+      c.lineWidth = ring.w;
+      c.shadowColor = 'rgba(226, 232, 240, 0.6)';
+      c.shadowBlur = 16;
+      c.stroke();
+      c.shadowBlur = 0;
+    });
+
+    /* circular spectrum of bars around the disc */
+    const BINS = 84;
+    for (let i = 0; i < BINS; i++) {
+      const idx = analyser ? Math.floor(Math.pow(i / BINS, 1.5) * freqData.length * 0.82) : 0;
+      const v = analyser ? freqData[idx] / 255 : 0;
+      const len = S * 0.016 + v * S * 0.15;
+      const ang = (i / BINS) * Math.PI * 2 - Math.PI / 2;
+      const cos = Math.cos(ang), sin = Math.sin(ang);
+      c.beginPath();
+      c.moveTo(S / 2 + cos * R0, S / 2 + sin * R0);
+      c.lineTo(S / 2 + cos * (R0 + len), S / 2 + sin * (R0 + len));
+      c.strokeStyle = 'rgba(230, 234, 239, ' + (0.3 + v * 0.7).toFixed(3) + ')';
+      c.lineWidth = Math.max(2, S * 0.006);
+      c.lineCap = 'round';
+      c.shadowColor = 'rgba(255, 255, 255, 0.7)';
+      c.shadowBlur = 6 + v * 18;
+      c.stroke();
+      c.shadowBlur = 0;
+    }
+  }
+
+  window.addEventListener('resize', () => { resizeDeckViz(); }, { passive: true });
+
+  (function vizLoop() {
+    drawBars();
+    drawViz();
+    requestAnimationFrame(vizLoop);
+  })();
+
+  /* ---------- boot: show first track, paused ---------- */
+  loadTrack(0, false);
+})();
+
 </script>
 </body>
 </html>
