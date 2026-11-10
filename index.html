@@ -7,6 +7,13 @@
 <meta name="color-scheme" content="dark" />
 <title>CYAN | CELLXGOD</title>
 <meta name="description" content="CYAN — CELLXGOD. The one behind everything." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="CYAN | CELLXGOD" />
+<meta property="og:description" content="CYAN — CELLXGOD. The one behind everything." />
+<meta property="og:image" content="https://repclosed.github.io/assets/avatar.jpg" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="CYAN | CELLXGOD" />
+<meta name="twitter:description" content="CYAN — CELLXGOD. The one behind everything." />
 <link rel="icon" href="assets/avatar.jpg" />
 <style>
   :root {
@@ -41,7 +48,8 @@
     background:
       radial-gradient(1200px 720px at 50% -10%, #101010 0%, var(--obsidian) 62%),
       radial-gradient(900px 600px at 80% 110%, #0c0c0c 0%, var(--obsidian) 70%);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   #scene {
@@ -406,6 +414,7 @@
   }
 
   .gate .rule {
+    display: block;
     width: 46px;
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.6), transparent);
@@ -526,15 +535,24 @@ import * as THREE from 'three';
 const canvas = document.getElementById('scene');
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const renderer = new THREE.WebGLRenderer({
-  canvas,
-  antialias: true,
-  alpha: true,
-  powerPreference: 'high-performance'
-});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-renderer.setSize(window.innerWidth, window.innerHeight, false);
-renderer.setClearColor(0x050505, 0);
+let renderer = null;
+try {
+  renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance',
+    preserveDrawingBuffer: true
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+  renderer.setClearColor(0x050505, 1);
+} catch (err) {
+  // WebGL unavailable: hide the canvas and continue with the DOM-only page
+  console.warn('WebGL unavailable, rendering without 3D scene:', err);
+  canvas.style.display = 'none';
+  renderer = null;
+}
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x050505, 0.026);
@@ -598,6 +616,7 @@ window.addEventListener('pointerdown', (e) => {
 }, { passive: true });
 
 function triggerAt(clientX, clientY) {
+  if (!renderer) return;
   ndc.x = (clientX / window.innerWidth) * 2 - 1;
   ndc.y = -(clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(ndc, camera);
@@ -660,7 +679,7 @@ for (let i = 0; i < COUNT; i++) {
   positions[i3 + 1] = basePos[i3 + 1];
   positions[i3 + 2] = basePos[i3 + 2];
 
-  sizes[i] = 0.55 + Math.pow(Math.random(), 3.2) * 3.4;
+  sizes[i] = 0.8 + Math.pow(Math.random(), 2.0) * 3.1;
   phases[i] = Math.random() * Math.PI * 2;
   brightness[i] = 0.35 + Math.random() * 0.65;
 }
@@ -699,12 +718,12 @@ const pMat = new THREE.ShaderMaterial({
       vec4 mv = modelViewMatrix * vec4(p, 1.0);
 
       float tw = 0.5 + 0.5 * sin(uTime * (1.6 + aBright * 1.4) + aPhase);
-      float sparkle = pow(tw, 5.0);
+      float sparkle = pow(tw, 3.0);
 
-      vAlpha = 0.16 + 0.84 * sparkle;
+      vAlpha = 0.06 + 0.94 * sparkle;
       vBright = aBright * (0.6 + sparkle * 0.9);
 
-      gl_PointSize = aSize * uPixelRatio * (58.0 / max(-mv.z, 0.6));
+      gl_PointSize = aSize * uPixelRatio * (46.0 / max(-mv.z, 0.6));
       gl_Position = projectionMatrix * mv;
     }
   `,
@@ -728,7 +747,7 @@ const pMat = new THREE.ShaderMaterial({
       float flare = smoothstep(0.055, 0.0, abs(uv.x)) * smoothstep(0.5, 0.0, abs(uv.y))
                   + smoothstep(0.055, 0.0, abs(uv.y)) * smoothstep(0.5, 0.0, abs(uv.x));
 
-      float a = star * 0.85 + halo * 0.34 + flare * 0.28;
+      float a = star * 0.7 + halo * 0.1 + flare * 0.18;
       vec3 col = uColor * (0.72 + vBright * 0.55);
       gl_FragColor = vec4(col, a * vAlpha);
     }
@@ -736,6 +755,7 @@ const pMat = new THREE.ShaderMaterial({
 });
 
 const glitter = new THREE.Points(pGeo, pMat);
+glitter.frustumCulled = false;
 scene.add(glitter);
 
 /* ---------------------------------------------------------
@@ -849,6 +869,7 @@ function spawnStardust(origin) {
   m.uniforms.uTime.value = 0;
 
   const pts = new THREE.Points(g, m);
+  pts.frustumCulled = false;
   scene.add(pts);
   dustBursts.push({ mesh: pts, vel: v, t: 0, life: 1.15 });
 }
@@ -978,6 +999,11 @@ const clock = new THREE.Clock();
 const tmpVec = new THREE.Vector3();
 
 function animate() {
+  if (!renderer || renderer.getContext().isContextLost()) {
+    // stop the loop gracefully — the DOM page keeps working without WebGL
+    canvas.style.display = 'none';
+    return;
+  }
   requestAnimationFrame(animate);
 
   const dt = Math.min(clock.getDelta(), 0.05);
@@ -1163,7 +1189,9 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-animate();
+if (renderer) {
+  animate();
+}
 
 /* ---------------------------------------------------------
    Resize
@@ -1180,10 +1208,11 @@ window.addEventListener('resize', () => {
     camera.fov = w < 560 ? 68 : 58;
     camera.updateProjectionMatrix();
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(w, h, false);
-
-    pMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio || 1, 2);
+    if (renderer) {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w, h, false);
+      pMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio || 1, 2);
+    }
   }, 120);
 }, { passive: true });
 
