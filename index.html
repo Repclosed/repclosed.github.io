@@ -1509,7 +1509,7 @@
     </div>
 
     <ul class="tracklist" id="tracklist" aria-label="Track list"></ul>
-    <p class="deck-foot">TRACKS · <a href="https://incompetech.com/" target="_blank" rel="noopener noreferrer">KEVIN MACLEOD — INCOMPETECH (CC BY 4.0)</a> VIA ARCHIVE.ORG<br />+ GENERATIVE WEB-AUDIO AMBIENT SYNTH · FREE FOREVER</p>
+    <p class="deck-foot">TRACKS · 30S PREVIEWS STREAMED FROM <a href="https://www.apple.com/itunes/" target="_blank" rel="noopener noreferrer">THE ITUNES SEARCH API</a> · LICENSED BY APPLE<br />SEARCH ANY SONG ABOVE · NO FILES STORED IN THIS REPO</p>
   </div>
 </section>
 
@@ -2227,8 +2227,8 @@ document.addEventListener('visibilitychange', () => {
 
 /* =========================================================
    CYAN // SOUND SYSTEM — search, mini player, holographic deck
-   Free streams (archive.org · Kevin MacLeod CC BY 4.0) with
-   CORS, plus generative Web Audio ambient synth as fallback.
+   No bundled audio. Tracks resolve at runtime from the public
+   iTunes Search API (licensed 30s previews, CORS enabled).
    ========================================================= */
 
 (() => {
@@ -2277,18 +2277,27 @@ document.addEventListener('visibilitychange', () => {
 
   if (!deck || !tracklistEl) return;
 
-  /* ---------- playlist ---------- */
-  const ARCHIVE = 'https://archive.org/download/KevinMacLeod_2019-04_Discography/Kevin%20MacLeod/Calming/';
-  const TRACKS = [
-    { name: 'Obsidian Drift',        artist: 'Generative · Ambient Synth', kind: 'synth',  synth: 'obsidian' },
-    { name: 'Carefree',              artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2004%20-%20Carefree.mp3' },
-    { name: 'Inner Light',           artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2010%20-%20Inner%20Light.mp3' },
-    { name: 'Meditation Impromptu',  artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2012%20-%20Meditation%20Impromptu%2001.mp3' },
-    { name: 'On the Passing of Time',artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2015%20-%20On%20the%20Passing%20of%20Time.mp3' },
-    { name: 'Bathed in the Light',   artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2002%20-%20Bathed%20in%20the%20Light.mp3' },
-    { name: 'Silver Blue Light',     artist: 'Kevin MacLeod · Calming',    kind: 'stream', url: ARCHIVE + 'Kevin%20MacLeod%20-%2018%20-%20Silver%20Blue%20Light.mp3' },
-    { name: 'Chrome Rain',           artist: 'Generative · Ambient Synth', kind: 'synth',  synth: 'chrome' },
-  ];
+  /* ---------- catalogue ----------
+     Zero local / bundled audio. Every entry is resolved at runtime from
+     Apple's public iTunes Search API, which serves the licensed 30-second
+     preview stream for the track (Access-Control-Allow-Origin: *). Nothing
+     is downloaded, hosted, or committed to the repository.
+     ------------------------------------------------------------------ */
+  const ITUNES_SEARCH = 'https://itunes.apple.com/search';
+
+  const SHELF = [
+    { name: 'Obsessed',                          artist: 'Heavenly Focus', query: 'obsessed heavenly focus' },
+    { name: 'Poster Boy',                        artist: 'ecentral',       query: 'poster boy ecentral' },
+    { name: '#BrooklynBloodPop! (Ultra Slowed)', artist: 'SyKo',           query: 'brooklynbloodpop slowed reverb', prefer: /slowed/i },
+    { name: 'Poker Face',                        artist: 'Lady Gaga',      query: 'lady gaga poker face', prefer: /glam as you radio/i },
+    { name: 'Let It Happen',                     artist: 'Tame Impala',    query: 'tame impala let it happen' },
+    { name: 'The Less I Know The Better',        artist: 'Tame Impala',    query: 'tame impala the less i know the better' },
+    { name: 'Borderline',                        artist: 'Tame Impala',    query: 'tame impala borderline' },
+    { name: 'La Mentira',                        artist: 'Luis Miguel',    query: 'luis miguel la mentira' },
+  ].map(t => Object.assign({ previewUrl: null, failed: false, duration: 0 }, t));
+
+  let queue = SHELF.slice();
+  let searchTimer = null, searchToken = 0;
 
   const fmtTime = (s) => {
     if (!isFinite(s)) return '∞';
@@ -2298,7 +2307,7 @@ document.addEventListener('visibilitychange', () => {
   };
 
   /* ---------- audio graph (lazy, gesture-gated) ---------- */
-  let ctx = null, analyser = null, masterGain = null, mediaSource = null, synthBus = null, freqData = null;
+  let ctx = null, analyser = null, masterGain = null, mediaSource = null, freqData = null;
 
   function ensureAudio() {
     if (ctx) return true;
@@ -2316,9 +2325,6 @@ document.addEventListener('visibilitychange', () => {
       masterGain.connect(ctx.destination);
       mediaSource = ctx.createMediaElementSource(audioEl);
       mediaSource.connect(analyser);
-      synthBus = ctx.createGain();
-      synthBus.gain.value = 0.9;
-      synthBus.connect(analyser);
       return true;
     } catch (err) {
       console.warn('Audio init failed:', err);
@@ -2327,108 +2333,9 @@ document.addEventListener('visibilitychange', () => {
     }
   }
 
-  /* ---------- generative ambient synth ---------- */
-  const synth = { timer: null, nodes: [], out: null, active: null };
-  const SCALES = {
-    obsidian: { pad: [110.0, 164.81, 220.0],  bells: [220, 246.94, 293.66, 329.63, 392.0, 440.0], cutoff: 820, delay: 0.62, lfo: 880 },
-    chrome:   { pad: [87.31, 130.81, 174.61], bells: [174.61, 196.0, 233.08, 261.63, 311.13, 349.23], cutoff: 620, delay: 0.46, lfo: 640 },
-  };
-
-  function startSynth(preset) {
-    stopSynth(true);
-    if (!ensureAudio()) return;
-    ctx.resume();
-    const cfg = SCALES[preset] || SCALES.obsidian;
-    const now = ctx.currentTime;
-
-    const out = ctx.createGain();
-    out.gain.setValueAtTime(0, now);
-    out.gain.linearRampToValueAtTime(1, now + 2.4);
-    out.connect(synthBus);
-
-    /* pad — detuned triangles + slow LFO sweep */
-    const padFilter = ctx.createBiquadFilter();
-    padFilter.type = 'lowpass';
-    padFilter.frequency.value = cfg.cutoff;
-    padFilter.Q.value = 7;
-    const padGain = ctx.createGain();
-    padGain.gain.value = 0.15;
-    padFilter.connect(padGain);
-    padGain.connect(out);
-
-    const padOsc = cfg.pad.map((f, i) => {
-      const o = ctx.createOscillator();
-      o.type = i === 1 ? 'sine' : 'triangle';
-      o.frequency.value = f;
-      o.detune.value = (i - 1) * 8;
-      o.connect(padFilter);
-      o.start();
-      return o;
-    });
-
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.07;
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = cfg.lfo * 0.32;
-    lfo.connect(lfoGain);
-    lfoGain.connect(padFilter.frequency);
-    lfo.start();
-
-    /* dub delay for space */
-    const delay = ctx.createDelay(1.5);
-    delay.delayTime.value = cfg.delay;
-    const fb = ctx.createGain(); fb.gain.value = 0.38;
-    const wet = ctx.createGain(); wet.gain.value = 0.32;
-    delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(out);
-
-    /* glass bell arp — pentatonic, randomized */
-    const bellAt = () => {
-      const t = ctx.currentTime;
-      const base = cfg.bells[Math.floor(Math.random() * cfg.bells.length)];
-      const note = base * (Math.random() < 0.26 ? 2 : 1);
-      const o  = ctx.createOscillator(); o.type = 'sine';     o.frequency.value = note;
-      const o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = note * 2.003;
-      const g  = ctx.createGain();
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.3, t + 0.014);
-      g.gain.exponentialRampToValueAtTime(0.0008, t + 3.8);
-      o.connect(g); o2.connect(g); g.connect(out);
-      const send = ctx.createGain(); send.gain.value = 0.85;
-      g.connect(send); send.connect(delay);
-      o.start(t); o2.start(t); o.stop(t + 4); o2.stop(t + 4);
-    };
-    const tick = () => {
-      bellAt();
-      synth.timer = window.setTimeout(tick, 1000 + Math.random() * 2600);
-    };
-    synth.timer = window.setTimeout(tick, 400);
-
-    synth.nodes = [...padOsc, lfo, out, padFilter, padGain, delay, fb, wet];
-    synth.out = out;
-    synth.active = preset;
-  }
-
-  function stopSynth(immediate) {
-    if (synth.timer) { clearTimeout(synth.timer); synth.timer = null; }
-    const nodes = synth.nodes;
-    const out = synth.out;
-    synth.nodes = []; synth.out = null; synth.active = null;
-    if (ctx && out && !immediate) {
-      try {
-        const t = ctx.currentTime;
-        out.gain.cancelScheduledValues(t);
-        out.gain.setValueAtTime(Math.max(out.gain.value, 0.0001), t);
-        out.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
-      } catch (e) { /* noop */ }
-    }
-    window.setTimeout(() => {
-      nodes.forEach(n => { try { n.disconnect(); if (n.stop) n.stop(); } catch (e) { /* noop */ } });
-    }, immediate ? 80 : 750);
-  }
-
   /* ---------- player state ---------- */
   let current = 0, isPlaying = false, shuffle = false, repeatOne = false;
-  let consecutiveErrors = 0;
+  let playToken = 0, deadSkips = 0;
 
   const setPlayingUI = (playing) => {
     isPlaying = playing;
@@ -2446,10 +2353,89 @@ document.addEventListener('visibilitychange', () => {
     trackButtons().forEach((el, idx) => el.classList.toggle('active', idx === current));
   };
 
+  /* ---------- iTunes preview resolution (no local audio) ---------- */
+  const squash = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  /* base title: strips "(Ultra Slowed)", "[Remix]" etc. before comparing */
+  const baseTitle = (s) => squash(String(s || '').replace(/\([^)]*\)|\[[^\]]*\]/g, ' '));
+
+  function scoreCandidate(track, it) {
+    if (!it || !it.previewUrl) return -1;
+    const a = squash(it.artistName), wantA = squash(track.artist);
+    const n = squash(it.trackName), wantN = squash(track.name);
+    const nb = baseTitle(it.trackName), wantNb = baseTitle(track.name);
+    /* curated entries must match both the artist and the base title; cover
+       versions, remixes and unrelated songs are rejected */
+    if (wantA && a !== wantA && !a.includes(wantA) && !wantA.includes(a)) return -1;
+    if (wantNb && nb !== wantNb && !nb.includes(wantNb) && !wantNb.includes(nb)) return -1;
+    let score = 0;
+    if (wantA && a === wantA) score += 8;
+    else if (wantA) score += 4;
+    /* exact title beats a qualified variant (remix / slowed / edit) */
+    if (n === wantN) score += 6;
+    else if (nb === wantNb) score += 3;
+    else score += 1;
+    if (track.prefer && track.prefer.test(it.trackName || '')) score += 10;
+    return score;
+  }
+
+  async function resolvePreview(track) {
+    if (track.previewUrl) return track.previewUrl;
+    if (track.failed || navigator.onLine === false) return null;
+    try {
+      const url = ITUNES_SEARCH + '?term=' + encodeURIComponent(track.query || (track.name + ' ' + track.artist)) +
+                  '&entity=song&limit=25&country=US';
+      const res = await fetch(url, { cache: 'force-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const best = (data.results || [])
+        .map(it => ({ it, score: scoreCandidate(track, it) }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)[0];
+      if (!best) { track.failed = true; return null; }
+      track.previewUrl = best.it.previewUrl;
+      return track.previewUrl;
+    } catch (err) {
+      console.warn('[player] preview lookup failed for', track.name, err);
+      return null;
+    }
+  }
+
+  /* ---------- tracklist render ---------- */
+  function renderTrackList() {
+    tracklistEl.innerHTML = '';
+    queue.forEach((t, i) => {
+      const li = document.createElement('li');
+      const searchAttr = (t.name + ' ' + t.artist + ' music audio track').toLowerCase();
+      li.innerHTML =
+        '<button class="track" data-search="' + searchAttr + '" aria-label="Play ' + t.name.replace(/"/g, '&quot;') + '">' +
+          '<span class="track-idx">' + String(i + 1).padStart(2, '0') + '</span>' +
+          '<span class="track-info">' +
+            '<span class="track-name">' + t.name + '</span>' +
+            '<span class="track-artist">' + (t.failed ? 'Not available' : t.artist) + '</span>' +
+          '</span>' +
+          '<span class="track-eq" aria-hidden="true"><i></i><i></i><i></i></span>' +
+          '<span class="track-dur">' + (t.failed ? '—' : (t.duration ? fmtTime(t.duration) : '·')) + '</span>' +
+        '</button>';
+      const btn = li.querySelector('.track');
+      if (i === current) btn.classList.add('active');
+      btn.addEventListener('click', () => loadTrack(i, true));
+      tracklistEl.appendChild(li);
+    });
+  }
+
+  function replaceQueue(list, label) {
+    queue = list;
+    current = 0;
+    deadSkips = 0;
+    renderTrackList();
+    if (searchStatus) searchStatus.textContent = label || (queue.length + ' TRACKS');
+  }
+
   function loadTrack(i, autoplay = true) {
-    current = ((i % TRACKS.length) + TRACKS.length) % TRACKS.length;
-    const t = TRACKS[current];
-    stopSynth(true);
+    if (!queue.length) return;
+    current = ((i % queue.length) + queue.length) % queue.length;
+    const t = queue[current];
+    playToken++;
     audioEl.pause();
     audioEl.removeAttribute('src');
     audioEl.load();
@@ -2459,41 +2445,54 @@ document.addEventListener('visibilitychange', () => {
     deckTrack.textContent = t.name;
     deckArtist.textContent = t.artist.toUpperCase();
     tCur.textContent = '0:00';
-    tDur.textContent = t.kind === 'synth' ? '∞' : '···';
+    tDur.textContent = t.failed ? '—' : (t.duration ? fmtTime(t.duration) : '···');
     scrubber.value = 0;
-    scrubber.disabled = t.kind === 'synth';
+    scrubber.disabled = true;
     scrubber.style.setProperty('--fill', '0%');
     markActiveTrack();
 
     if (autoplay) playCurrent(); else setPlayingUI(false);
   }
 
-  function playCurrent() {
-    const t = TRACKS[current];
+  async function playCurrent() {
+    if (!queue.length) return;
+    const t = queue[current];
     if (!ensureAudio()) { setPlayingUI(false); return; }
     ctx.resume();
-    if (t.kind === 'synth') {
-      startSynth(t.synth);
-      setPlayingUI(true);
-      consecutiveErrors = 0;
-    } else {
-      if (audioEl.src !== t.url) audioEl.src = t.url;
-      audioEl.crossOrigin = 'anonymous';
-      const p = audioEl.play();
-      if (p && p.catch) {
-        p.catch(() => {
-          consecutiveErrors++;
-          loadTrack((current + 1) % TRACKS.length, true);
-        });
+    const token = ++playToken;
+
+    const url = await resolvePreview(t);
+    if (token !== playToken) return;
+
+    if (!url) {
+      t.failed = true;
+      setPlayingUI(false);
+      renderTrackList();
+      if (queue.length > 1) {
+        deadSkips++;
+        if (deadSkips < queue.length) loadTrack(current + 1, true);
+        else deadSkips = 0;
       }
+      return;
+    }
+
+    if (audioEl.src !== url) { audioEl.src = url; audioEl.load(); }
+    audioEl.crossOrigin = 'anonymous';
+    tDur.textContent = '···';
+    scrubber.disabled = false;
+    try {
+      await audioEl.play();
+      if (token !== playToken) return;
       setPlayingUI(true);
-      consecutiveErrors = 0;
+      deadSkips = 0;
+    } catch (err) {
+      console.warn('[player] playback blocked/failed:', err && err.message);
+      setPlayingUI(false);
     }
   }
 
   function pauseCurrent() {
-    if (TRACKS[current].kind === 'synth') stopSynth(false);
-    else audioEl.pause();
+    audioEl.pause();
     setPlayingUI(false);
   }
 
@@ -2504,33 +2503,33 @@ document.addEventListener('visibilitychange', () => {
   }
 
   function nextTrack() {
+    if (!queue.length) return;
     let n;
-    if (shuffle && TRACKS.length > 1) {
-      do { n = Math.floor(Math.random() * TRACKS.length); } while (n === current);
+    if (shuffle && queue.length > 1) {
+      do { n = Math.floor(Math.random() * queue.length); } while (n === current);
     } else {
-      n = (current + 1) % TRACKS.length;
+      n = (current + 1) % queue.length;
     }
     loadTrack(n, true);
   }
 
   function prevTrack() {
-    if (TRACKS[current].kind === 'stream' && audioEl.currentTime > 3) {
-      audioEl.currentTime = 0;
-      return;
-    }
-    loadTrack((current - 1 + TRACKS.length) % TRACKS.length, true);
+    if (audioEl.currentTime > 3) { audioEl.currentTime = 0; return; }
+    if (!queue.length) return;
+    loadTrack((current - 1 + queue.length) % queue.length, true);
   }
 
   audioEl.addEventListener('error', () => {
-    if (TRACKS[current].kind !== 'stream') return;
-    consecutiveErrors++;
-    if (consecutiveErrors >= 3) {
-      /* network/route dead — drop to guaranteed-local generative track */
-      consecutiveErrors = 0;
-      loadTrack(0, true);
-    } else {
-      loadTrack((current + 1) % TRACKS.length, true);
-    }
+    const t = queue[current];
+    if (!t || !audioEl.getAttribute('src')) return;
+    console.warn('[player] stream error:', t.name);
+    setPlayingUI(false);
+    t.failed = true;
+    t.previewUrl = null;
+    renderTrackList();
+    deadSkips++;
+    if (deadSkips < queue.length) loadTrack(current + 1, true);
+    else deadSkips = 0;
   });
 
   audioEl.addEventListener('ended', () => {
@@ -2538,9 +2537,23 @@ document.addEventListener('visibilitychange', () => {
     nextTrack();
   });
 
+  audioEl.addEventListener('loadedmetadata', () => {
+    const dur = audioEl.duration;
+    if (!dur || !isFinite(dur)) return;
+    const t = queue[current];
+    if (t) t.duration = dur;
+    tDur.textContent = fmtTime(dur);
+    scrubber.disabled = false;
+    const row = trackButtons()[current];
+    const durEl = row && row.querySelector('.track-dur');
+    if (durEl) durEl.textContent = fmtTime(dur);
+  });
+
   audioEl.addEventListener('timeupdate', () => {
     const dur = audioEl.duration;
     if (!dur || !isFinite(dur)) return;
+    const t = queue[current];
+    if (t && !t.duration) t.duration = dur;
     const ratio = audioEl.currentTime / dur;
     scrubber.value = String(Math.floor(ratio * 1000));
     scrubber.style.setProperty('--fill', (ratio * 100).toFixed(2) + '%');
@@ -2553,22 +2566,7 @@ document.addEventListener('visibilitychange', () => {
   });
 
   /* ---------- tracklist ---------- */
-  TRACKS.forEach((t, i) => {
-    const li = document.createElement('li');
-    const searchAttr = (t.name + ' ' + t.artist + ' music audio track').toLowerCase();
-    li.innerHTML =
-      '<button class="track" data-search="' + searchAttr + '" aria-label="Play ' + t.name + '">' +
-        '<span class="track-idx">' + String(i + 1).padStart(2, '0') + '</span>' +
-        '<span class="track-info">' +
-          '<span class="track-name">' + t.name + '</span>' +
-          '<span class="track-artist">' + t.artist + '</span>' +
-        '</span>' +
-        '<span class="track-eq" aria-hidden="true"><i></i><i></i><i></i></span>' +
-        '<span class="track-dur">' + (t.kind === 'synth' ? '∞' : '—') + '</span>' +
-      '</button>';
-    li.querySelector('.track').addEventListener('click', () => loadTrack(i, true));
-    tracklistEl.appendChild(li);
-  });
+  renderTrackList();
 
   /* ---------- transport wiring ---------- */
   mpPlay.addEventListener('click', togglePlay);
@@ -2690,32 +2688,67 @@ document.addEventListener('visibilitychange', () => {
      ========================================================= */
   const capsuleEls = () => Array.from(capsulesEl.querySelectorAll('.capsule'));
 
-  function applyFilter() {
-    const q = searchInput.value.trim().toLowerCase();
-    searchbar.classList.toggle('has-query', q.length > 0);
-    let linkCount = 0, trackCount = 0;
-
+  /* links filter locally */
+  function filterLinks(q) {
+    let visible = 0;
     capsuleEls().forEach(el => {
       const ok = !q || ((el.dataset.search || '') + ' ' + el.textContent).toLowerCase().includes(q);
       el.classList.toggle('hidden', !ok);
-      if (ok) linkCount++;
+      if (ok) visible++;
     });
+    if (capsulesEmpty) capsulesEmpty.hidden = !(q && visible === 0);
+    return visible;
+  }
 
-    trackButtons().forEach(el => {
-      const ok = !q || ((el.dataset.search || '') + ' ' + el.textContent).toLowerCase().includes(q);
-      el.classList.toggle('hidden', !ok);
-      if (ok) trackCount++;
-    });
-
-    if (capsulesEmpty) capsulesEmpty.hidden = !(q && linkCount === 0);
-    if (searchStatus) {
-      searchStatus.textContent = q
-        ? linkCount + ' LINKS · ' + trackCount + ' TRACKS' + ((linkCount === 0 && trackCount === 0) ? ' · NO MATCH' : '')
-        : '';
+  /* tracks: debounced 350ms live search across the licensed catalogue */
+  async function searchTracks(q) {
+    const token = ++searchToken;
+    if (searchStatus) searchStatus.textContent = 'SEARCHING…';
+    try {
+      const url = ITUNES_SEARCH + '?term=' + encodeURIComponent(q) + '&entity=song&limit=25&country=US';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (token !== searchToken) return;
+      const found = (data.results || [])
+        .filter(it => it.previewUrl && it.trackName)
+        .slice(0, 12)
+        .map(it => ({
+          name: it.trackName,
+          artist: it.artistName + (it.collectionName ? ' · ' + it.collectionName : ''),
+          query: it.trackName + ' ' + it.artistName,
+          previewUrl: it.previewUrl,
+          duration: (it.trackTimeMillis || 0) / 1000,
+          failed: false,
+        }));
+      if (!found.length) {
+        if (searchStatus) searchStatus.textContent = 'NO TRACKS FOUND';
+        return;
+      }
+      const linkCount = filterLinks(q.toLowerCase());
+      replaceQueue(found, found.length + ' TRACKS · ' + linkCount + ' LINKS');
+    } catch (err) {
+      if (token !== searchToken) return;
+      console.warn('[search] failed:', err);
+      if (searchStatus) searchStatus.textContent = 'SEARCH UNAVAILABLE';
     }
   }
 
-  searchInput.addEventListener('input', applyFilter);
+  function restoreShelf() {
+    searchToken++;
+    filterLinks('');
+    replaceQueue(SHELF.slice(), 'CURATED · ' + SHELF.length + ' TRACKS');
+  }
+
+  searchInput.addEventListener('input', () => {
+    const raw = searchInput.value.trim();
+    searchbar.classList.toggle('has-query', raw.length > 0);
+    filterLinks(raw.toLowerCase());
+    clearTimeout(searchTimer);
+    if (!raw) { restoreShelf(); return; }
+    if (raw.length < 2) { if (searchStatus) searchStatus.textContent = 'KEEP TYPING…'; return; }
+    searchTimer = setTimeout(() => searchTracks(raw), 350);
+  });
 
   document.addEventListener('keydown', (e) => {
     const tag = (e.target.tagName || '').toLowerCase();
@@ -2727,7 +2760,7 @@ document.addEventListener('visibilitychange', () => {
     } else if (e.key === 'Escape') {
       if (document.activeElement === searchInput) {
         searchInput.value = '';
-        applyFilter();
+        restoreShelf();
         searchInput.blur();
       } else if (deckOpen) {
         closeDeck();
